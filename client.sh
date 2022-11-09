@@ -55,6 +55,10 @@ MSG=`nc -l $PORT`
 			exit 3
 		fi
 
+FILEHASH=`echo $FILE_NAME | md5sum | cut -d " " -f 1`
+
+	echo "FILE_HASH $FILE_NAME $FILEHASH" | nc $IP_SERVER $PORT
+MSG=`nc -l $PORT`
 
 	echo "Fin del envío"
 
