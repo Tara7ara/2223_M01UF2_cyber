@@ -1,5 +1,9 @@
 #!/bin/bash
 
+listen_port(){
+	MSG=`nc -l $PORT`
+}
+
 IP_LOCAL=`ip address | grep -i inet | grep enp0s3 | sed "s/^ *//g" | cut -d " " -f 2 | cut -d "/" -f 1`
 
 
@@ -11,7 +15,7 @@ echo "Servidor HMTP"
 
 echo "(0) LISTEN - Levantando el servidor"
 
-MSG=`nc -l $PORT`
+listen_port
 
 HANDSHAKE=`echo $MSG | cut -d " " -f 1`
 IP_CLIENT=`echo $MSG | cut -d " " -f 2`
@@ -35,9 +39,27 @@ fi
 
 echo "OK_HMTP" | nc $IP_CLIENT $PORT
 
+echo "(3.1) LISTEN - Escuchando el nombre del archivo"
+
+listen_port
+
+PREFIX=`echo $MSG | cut -d " " -f 1`
+NUM_FILES=`echo $NUM_FILES | cut -d " " -f 2`
+
+if [ "$PREFIX" != "NUM_FILES" ]
+then
+	echo "KO_NUM_FILES" | nc $IP_CLIENT $PORT
+	exit 2
+fi
+
+echo "OK_NUM_FILES" | nc $IP_CLIENT $PORT
+
+for N in `seq $NUM_FILES`
+do
+
 echo "(4) LISTEN - Escuchando el nombre de archivo"
 
-MSG=`nc -l $PORT`
+listen_port
 
 PREFIX=`echo $MSG | cut -d " " -f 1`
 FILE_NAME=`echo $MSG | cut -d " " -f 2`
@@ -71,7 +93,7 @@ echo "OK_DATA_RCPT" | nc $IP_CLIENT $PORT
 
 echo "(12) LISTEN - MD5 de los datos"
 
-MSG=`nc -l $PORT`
+listen_port
 
 PREFIX=`echo $MSG | cut -d " " -f 1`
 DATA_MD5=`echo $MSG | cut -d " " -f 2`
@@ -92,6 +114,8 @@ then
 fi
 
 echo "OK_DATA_MD5" | nc $IP_CLIENT $PORT
+
+done
 
 echo "Fin de la recepción"
 
